@@ -33,6 +33,8 @@ def main():
     start_page = int(os.environ.get("START_PAGE", 1))
     limit = int(os.environ.get("LIMIT", 50))
 
+
+    topic = os.environ["KAFKA_TOPIC"]
     bootstrap_servers = os.environ.get("KAFKA_BROKER").split(",")
     producer = create_kafka_producer(bootstrap_servers)
 
@@ -44,7 +46,8 @@ def main():
     )
 
     for post in posts:
-        publish(post, producer)
+        logger.info(f"Publishing post id={post['id']} title={post['title']!r}")
+        publish(topic, post, producer)
 
     producer.flush()
 

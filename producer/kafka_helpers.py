@@ -17,8 +17,8 @@ class FlushAfter:
 
     def __call__(self, publish_fn):
         @wraps(publish_fn)
-        def wrapper(post: dict, producer: KafkaProducer):
-            result = publish_fn(post, producer)
+        def wrapper(topic: str, post: dict, producer: KafkaProducer):
+            result = publish_fn(topic, post, producer)
             self._current_queue_size += 1
             if self._current_queue_size % self.flush_after_count == 0:
                 logger.info("Flushing Kafka producer...")
@@ -32,6 +32,5 @@ flush_after = FlushAfter()
 
 
 @flush_after
-def publish(post: dict, producer: KafkaProducer) -> None:
-    logger.info(f"Publishing post id={post['id']} title={post['title']!r}")
-    producer.send("lemmy_posts", key=uuid.uuid4().bytes, value=post)
+def publish(topic: str, post: dict, producer: KafkaProducer) -> None:
+    producer.send(topic, key=uuid.uuid4().bytes, value=post)
