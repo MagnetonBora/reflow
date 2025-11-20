@@ -1,15 +1,15 @@
 # Reflow
 
-**Reflow** is an educational Python application designed to stream the latest posts from Reddit into Apache Kafka for learning and experimentation with data pipelines.
+**Reflow** is an educational Python application designed to stream the latest posts from Lemmy into Apache Kafka for learning and experimentation with data pipelines.
 
 ## Overview
 
 This project demonstrates how to:  
-- Fetch the latest posts from a specific subreddit (`r/programming`) using the [Python Reddit API Wrapper (PRAW)](https://praw.readthedocs.io/en/stable/).  
-- Stream subreddit posts into an Apache Kafka topic.  
+- Fetch the latest posts from a specific Lemmy community using the [Lemmy API](https://join-lemmy.org/api/).  
+- Stream community posts into an Apache Kafka topic.  
 - Consume and display messages from Kafka, simulating a real-world data pipeline workflow.
 
-**Note:** This application is strictly for educational purposes. It does not post content, comment, or interact with Reddit users in any way. Only publicly available data is used.
+**Note:** This application is strictly for educational purposes. It does not post content, comment, or interact with Lemmy users in any way. Only publicly available data is used.
 
 ## Message Format
 
