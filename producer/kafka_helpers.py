@@ -28,7 +28,7 @@ class FlushAfter:
         return wrapper
 
 
-flush_after = FlushAfter()
+flush_after = FlushAfter(flush_after_count=20)
 
 
 @flush_after

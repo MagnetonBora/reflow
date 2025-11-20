@@ -48,6 +48,12 @@ def main():
     for post in posts:
         logger.info(f"Publishing post id={post['id']} title={post['title']!r}")
         publish(topic, post, producer)
+        comments = {
+            "id": post["id"],
+            "comments": "This looks interesting! Can't wait to read more."
+        }
+        logger.info(f"Publishing comment for post id={post['id']}")
+        publish(topic, comments, producer)
 
     producer.flush()
 
