@@ -2,7 +2,7 @@ import logging
 
 from dataclasses import dataclass, field
 from collections import deque
-from tenacity import retry, wait_exponential
+from tenacity import retry, wait_exponential, before_sleep_log, stop_after_attempt
 from pythorhead import Lemmy
 
 
@@ -14,12 +14,13 @@ class PostsIter:
     lemmy: Lemmy
     community_id: int
     current_page: int = 1
-    limit: int = 50
+    limit: int = 10
     _posts_buffer: deque = field(default_factory=deque)
 
     @retry(
-        stop=lambda state: state.attempt_number >= 3,
-        wait=wait_exponential(min=4, max=10),
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=2, min=10, max=60),
+        before_sleep=before_sleep_log(logger, logging.ERROR),
         reraise=True,
     )
     def _get_posts(self):
@@ -50,10 +51,10 @@ def fetch_posts(
     lemmy_node: str,
     community_name: str,
     page: int = 1,
-    limit: int = 50,
+    limit: int = 10,
     buffer_size: int = 30
 ) -> iter:
-    lemmy = Lemmy(lemmy_node)
+    lemmy = Lemmy(lemmy_node, raise_exceptions=True,)
     lemmy.log_in(username, password)
     logger.info(f"Logged in as {username}")
 
@@ -76,12 +77,10 @@ def fetch_posts(
         buffer.append(post_entry)
 
         if len(buffer) >= buffer_size:
-            for entry in buffer:
-                yield entry
+            yield from buffer
             logger.info(f"Fetched batch of {len(buffer)} posts.")
             buffer.clear()
 
     if buffer:
-        for entry in buffer:
-            yield entry
+        yield from buffer
         logger.info(f"Fetched final batch of {len(buffer)} posts.")
