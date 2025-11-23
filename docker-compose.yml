@@ -8,6 +8,8 @@ services:
       - "8080:8080"
     volumes:
       - conduktor_data:/var/conduktor
+    networks:
+      - conduktor-net
     environment:
       CDK_DATABASE_URL: "postgresql://conduktor:change_me@postgresql:5432/conduktor-console"
       CDK_KAFKASQL_DATABASE_URL: "postgresql://conduktor:change_me@postgresql-sql:5432/conduktor-sql"
@@ -48,6 +50,8 @@ services:
     hostname: postgresql
     volumes:
       - pg_data:/var/lib/postgresql/data
+    networks:
+      - conduktor-net
     environment:
       PGDATA: "/var/lib/postgresql/data"
       POSTGRES_DB: "conduktor-console"
@@ -68,6 +72,8 @@ services:
     hostname: postgresql-sql
     volumes:
       - pg_data_sql:/var/lib/postgresql/data
+    networks:
+      - conduktor-net
     environment:
       PGDATA: "/var/lib/postgresql/data"
       POSTGRES_DB: "conduktor-sql"
@@ -86,6 +92,8 @@ services:
     image: conduktor/conduktor-console-cortex:1.38.0
     environment:
       CDK_CONSOLE-URL: "http://conduktor-console:8080"
+    networks:
+      - conduktor-net
   # We use Redpanda to get started with Kafka as it's small and efficient.
   # This is an example here. For production, connect Conduktor to your own Kafka clusters.
   redpanda-0:
@@ -109,6 +117,8 @@ services:
     container_name: redpanda-0
     volumes:
       - redpanda-0:/var/lib/redpanda/data
+    networks:
+      - conduktor-net
     ports:
       - 18081:18081
       - 18082:18082
@@ -132,6 +142,8 @@ services:
       GATEWAY_ACL_ENABLED: false
     ports:
       - "8888:8888"
+    networks:
+      - conduktor-net
     healthcheck:
       test: curl localhost:8888/health
       interval: 5s
@@ -144,6 +156,8 @@ services:
   conduktor-data-generator:
     image: conduktor/conduktor-data-generator:0.9
     container_name: conduktor-data-generator
+    networks:
+      - conduktor-net
     environment:
       KAFKA_BOOTSTRAP_SERVERS: conduktor-gateway:6969
       KAFKA_SCHEMA_REGISTRY_URL: http://redpanda-0:8081
@@ -154,8 +168,13 @@ services:
         condition: service_healthy
       conduktor-gateway:
         condition: service_healthy
+
 volumes:
   pg_data: {}
   pg_data_sql: {}
   conduktor_data: {}
   redpanda-0: {}
+
+networks:
+  conduktor-net:
+    external: true

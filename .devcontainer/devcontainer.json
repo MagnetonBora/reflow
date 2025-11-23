@@ -1,0 +1,11 @@
+{
+  "name": "Reflow Dev Container",
+    "build": {
+    "context": "..",
+    "dockerfile": "Dockerfile"
+  },
+  "runArgs": [
+    "--network=conduktor-net"
+  ],
+  "workspaceFolder": "/reflow"
+}
