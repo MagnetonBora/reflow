@@ -1,0 +1,8 @@
+{
+  "name": "Python Dev Container",
+  "image": "python:3.11",
+  // "forwardPorts": [19092],
+  "runArgs": [
+    "--network=conduktor-net"
+  ]
+}
