@@ -2,7 +2,13 @@ import logging
 
 from dataclasses import dataclass, field
 from collections import deque
-from tenacity import retry, wait_exponential, before_sleep_log, stop_after_attempt
+from tenacity import (
+    Retrying,
+    RetryError,
+    wait_exponential,
+    before_sleep_log,
+    stop_after_attempt,
+)
 from pythorhead import Lemmy
 
 
@@ -17,19 +23,28 @@ class PostsIter:
     limit: int = 10
     _posts_buffer: deque = field(default_factory=deque)
 
-    @retry(
-        stop=stop_after_attempt(3),
-        wait=wait_exponential(multiplier=2, min=10, max=60),
-        before_sleep=before_sleep_log(logger, logging.ERROR),
-        reraise=True,
-    )
     def _get_posts(self):
         logger.info(f"Fetching posts page={self.current_page} limit={self.limit}")
-        return self.lemmy.post.list(
-            community_id=self.community_id,
-            page=self.current_page,
-            limit=self.limit,
+        retrying = Retrying(
+            stop=stop_after_attempt(3),
+            wait=wait_exponential(multiplier=2, min=10, max=60),
+            before_sleep=before_sleep_log(logger, logging.ERROR),
+            reraise=False,
         )
+        # TODO: This needs to be semplified. Currenly Lemmy API return 400 error code when 
+        # there are no more posts to fetch, but this is not an error condition. 
+        # We should handle this case without retrying.
+        try:
+            for attempt in retrying:
+                with attempt:
+                    return self.lemmy.post.list(
+                        community_id=self.community_id,
+                        page=self.current_page,
+                        limit=self.limit,
+                    )        
+        except (RetryError, Exception):
+            logger.warning(f"Fetching posts page={self.current_page} limit={self.limit} got no results")
+        return []
 
     def __iter__(self):
         return self
